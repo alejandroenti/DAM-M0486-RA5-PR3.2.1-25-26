@@ -1,7 +1,10 @@
 const WebSocket = require('ws');
 const readline = require('readline');
 
-const WS_URL = 'ws://localhost:8080';
+const dotenv = require('dotenv');
+dotenv.config();
+
+const WS_URL = `ws://${process.env.WS_HOST}:${process.env.WS_PORT}`;
 
 const ws = new WebSocket(WS_URL);
 
@@ -21,7 +24,7 @@ ws.on('message', (raw) => {
     console.log(`Posició final:            (${data.endPosition.x}, ${data.endPosition.y})`);
     console.log(`Distància en línia recta: ${data.straightLineDistance}`);
     console.log('==========================================\n');
-    console.log('Nova partida iniciada. Continua movent-te!\n');
+    console.log('Comença una nova partida movent-te!\n');
   } else if (data.type === 'ack') {
     process.stdout.write(`\rPosició: (${data.position.x}, ${data.position.y})   `);
   }

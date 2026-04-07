@@ -15,13 +15,13 @@ async function startServer() {
   const client = new MongoClient(process.env.MONGO_URI);
   await client.connect();
   const db = client.db(process.env.DB_NAME);
-  const sessionsCol = db.collection('sessions');
-  const positionsCol = db.collection('player_positions');
+  const sessionsCol = db.collection(process.env.COLLECTION_SESSIONS_NAME);
+  const positionsCol = db.collection(process.env.COLLECTION_PLAYER_POSITIONS_NAME);
   logger.info('Connected to MongoDB');
 
   // Create WebSocket server
-  const wss = new WebSocket.Server({ port: 8080 });
-  logger.info('WebSocket server listening on ws://localhost:8080');
+  const wss = new WebSocket.Server({ port: process.env.WS_PORT });
+  logger.info(`WebSocket server listening on ws://${process.env.WS_HOST}:${process.env.WS_PORT}`);
 
   wss.on('connection', (ws) => {
     let sessionId = crypto.randomUUID();
@@ -48,7 +48,7 @@ async function startServer() {
         const dy = lastPosition.y - firstPosition.y;
         const distance = Math.round(Math.sqrt(dx * dx + dy * dy) * 100) / 100;
 
-        // Update session with totalDistance (matches Session model)
+        // Update session with totalDistance
         await sessionsCol.updateOne(
           { sessionId },
           { $set: { totalDistance: distance, updatedAt: new Date() } }
@@ -116,7 +116,7 @@ async function startServer() {
 
         logger.info(`Move #${moveCount} delta:(${dx},${dy}) -> pos:(${currentPosition.x},${currentPosition.y}) session:${sessionId}`);
 
-        // Save movement delta as PlayerPosition document (matches PlayerPosition model)
+        // Save movement delta as PlayerPosition document
         const moveNow = new Date();
         await positionsCol.insertOne({
           playerPositionId: crypto.randomUUID(),
