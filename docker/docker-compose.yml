@@ -2,7 +2,7 @@ version: '3.1'
 services:
   mongo:
     image: mongo:latest
-    container_name: m0486-tema4-ra5-mongo
+    container_name: pr32_websocket_link_mongo
     ports:
       - "27017:27017"
     environment:
@@ -14,7 +14,7 @@ services:
 
   mongo-express:
     image: mongo-express:latest
-    container_name: m0486-tema4-ra5-mongo-express
+    container_name: pr32_websocket_link_mongo_websockets
     depends_on:
       - mongo
     ports:
@@ -22,7 +22,7 @@ services:
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: password
-      ME_CONFIG_MONGODB_URL: "mongodb://root:password@m0486-tema4-ra5-mongo:27017/"
+      ME_CONFIG_MONGODB_URL: "mongodb://root:password@pr32_websocket_link:27017/"
 volumes:
   mongo-data:
   
