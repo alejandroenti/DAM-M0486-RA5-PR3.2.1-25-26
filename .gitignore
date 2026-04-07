@@ -5,6 +5,7 @@ package-lock.json
 # Project specific
 utils/output/*
 data/logs/*
+.env
 
 # Editor directories and files
 .idea/
