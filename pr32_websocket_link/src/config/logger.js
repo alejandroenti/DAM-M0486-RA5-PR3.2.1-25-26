@@ -1,6 +1,7 @@
 const winston = require('winston');
 const { format } = winston; // Afegim l'import del format
 require('winston-daily-rotate-file');
+const LokiTransport = require('winston-loki');
 const path = require('path');
 const fs = require('fs');
 
@@ -70,21 +71,17 @@ if (process.env.LOG_FILE_PATH) {
     }
 }
 
-// Middleware per Express
-const expressLogger = (req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        logger.info('HTTP Request', {
-            method: req.method,
-            url: req.url,
-            status: res.statusCode,
-            duration: `${duration}ms`,
-            ip: req.ip,
-            userAgent: req.get('user-agent')
-        });
-    });
-    next();
-};
+if (process.env.LOKI_HOST) {
+    logger.add(new LokiTransport({
+        host: process.env.LOKI_HOST,
+        labels: { app: 'websocket-server' },
+        json: true,
+        format: format.combine(
+            format.timestamp(),
+            format.json()
+        ),
+        onConnectionError: (err) => console.error('Loki connection error:', err)
+    }));
+}
 
-module.exports = { logger, expressLogger };
+module.exports = { logger };
