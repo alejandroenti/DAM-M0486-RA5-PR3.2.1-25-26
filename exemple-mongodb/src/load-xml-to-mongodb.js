@@ -6,7 +6,7 @@ const xml2js = require('xml2js');
 require('dotenv').config();
 
 // Bona pràctica: Les constants globals s'escriuen en UPPER_SNAKE_CASE per distingir-les
-const XML_FILE_PATH = path.join(__dirname, '../../data/youtubers.xml');
+const XML_FILE_PATH = path.join(__dirname, process.env.DATA_DIR, process.env.DATA_FILE);
 
 /**
  * Llegeix i analitza un fitxer XML de forma asíncrona.
@@ -82,15 +82,16 @@ function processYoutuberData(data) {
  */
 async function loadDataToMongoDB() {
   // 7. Connexió a la base de dades. Idealment, mai posar credencials hardcoded en producció.
-  const uri = process.env.MONGODB_URI || 'mongodb://root:password@localhost:27017/';
+  const uri = process.env.MONGODB_URI ||
+    `${process.env.DB_PROTOCOL}://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/`;
   const client = new MongoClient(uri);
   
   try {
     await client.connect();
     console.log('✅ Connectat correctament a MongoDB');
     
-    const database = client.db('youtubers_db');
-    const collection = database.collection('youtubers');
+    const database = client.db(process.env.DB_NAME);
+    const collection = database.collection(process.env.DB_COLLECTION);
 
     // Crear índex únic en youtuberId per garantir idempotència
     await collection.createIndex({ youtuberId: 1 }, { unique: true });
