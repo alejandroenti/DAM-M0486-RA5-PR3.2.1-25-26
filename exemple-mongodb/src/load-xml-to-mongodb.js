@@ -140,3 +140,10 @@ async function loadDataToMongoDB() {
 if (require.main === module) {
   loadDataToMongoDB();
 }
+
+// Exportar les funcions per als tests
+module.exports = {
+  parseXMLFile,
+  processYoutuberData,
+  loadDataToMongoDB
+};
