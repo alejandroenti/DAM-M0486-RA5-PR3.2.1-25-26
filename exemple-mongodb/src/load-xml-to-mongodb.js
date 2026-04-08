@@ -91,6 +91,9 @@ async function loadDataToMongoDB() {
     
     const database = client.db('youtubers_db');
     const collection = database.collection('youtubers');
+
+    // Crear índex únic en youtuberId per garantir idempotència
+    await collection.createIndex({ youtuberId: 1 }, { unique: true });
     
     console.log('📄 Llegint el fitxer XML...');
     const xmlData = await parseXMLFile(XML_FILE_PATH);
@@ -102,14 +105,27 @@ async function loadDataToMongoDB() {
       console.log('⚠️ No s\'han trobat dades vàlides per inserir.');
       return;
     }
+
+    if (youtubers.some(y => !y.youtuberId)) {
+      console.warn('⚠️ Alguns documents no tenen youtuberId.');
+    }
     
-    console.log('🗑️ Eliminant dades existents a la col·lecció (reset)...');
-    await collection.deleteMany({});
+    console.log('💾 Inserint/actualizant noves dades a MongoDB...');
+    const bulkops = youtubers.map(youtuber => ({
+      updateOne: {
+        filter: { youtuberId: youtuber.youtuberId },
+        update: { $set: youtuber },
+        upsert: true
+      }
+    }));
+
+    // Completar acció parcialment si:
+    // - L'índex únic no està creat (per evitar errors de duplicats)
+    // - Problemes de validació amb l'scheme
+    // - Es tenca la connexió a MongoDB durant la inserció
+    const result = await collection.bulkWrite(bulkops, { ordered: false });
     
-    console.log('💾 Inserint noves dades a MongoDB...');
-    const result = await collection.insertMany(youtubers);
-    
-    console.log(`🎉 ${result.insertedCount} documents inserits correctament!`);
+    console.log(`🎉 ${result.upsertedCount} documents inserits i ${result.modifiedCount} actualitzats correctament!`);
     
   } catch (error) {
     console.error('❌ Error general carregant les dades a MongoDB:', error);
