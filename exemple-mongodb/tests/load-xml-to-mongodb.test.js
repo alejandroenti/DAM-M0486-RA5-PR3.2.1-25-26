@@ -1,6 +1,7 @@
 const fs = require('fs').promises; 
 
 const { parseXMLFile } = require('../src/load-xml-to-mongodb');
+const { processYoutuberData } = require('../src/load-xml-to-mongodb');
 
 beforeEach(() => {
   jest.mock('fs');
@@ -84,5 +85,128 @@ describe('parseXMLFile', () => {
 
     // Act & Assert
     await expect(parseXMLFile('dummy-path')).rejects.toThrow();
+    });
+});
+
+describe('processYoutuberData', () => {
+    test('should process youtuber data correctly', () => {
+    // Arrange
+    const rawData = {
+        youtubers: {
+        youtuber: {
+            id: '1',
+            channel: 'TechReviewsXYZ',
+            name: 'Maria García',
+            subscribers: '5230000',
+            joinDate: '2015-03-22',
+            categories: {
+            category: ['Technology', 'Reviews']
+            },
+            videos: {
+            video: {
+                id: 'v1001',
+                title: '10 Best Smartphones of 2024',
+                duration: '15:42',
+                views: '3500000',
+                uploadDate: '2024-02-15',
+                likes: '278500',
+                comments: '15230'
+            }
+            }
+        }
+        }
+    };
+
+    // Act
+    const processedData = processYoutuberData(rawData);
+
+    // Assert
+    expect(processedData).toEqual([
+        {
+        youtuberId: '1',
+        channel: 'TechReviewsXYZ',
+        name: 'Maria García',
+        subscribers: 5230000,
+        joinDate: new Date('2015-03-22'),
+        categories: ['Technology', 'Reviews'],
+        videos: [
+            {
+            videoId: 'v1001',
+            title: '10 Best Smartphones of 2024',
+            duration: '15:42',
+            views: 3500000,
+            uploadDate: new Date('2024-02-15'),
+            likes: 278500,
+            comments: 15230
+            }
+        ]
+        }
+    ]);
+    });
+
+    test('should return empty array if no youtubers', () => {
+    // Arrange
+    const rawData = {};
+
+    // Act
+    const processedData = processYoutuberData(rawData);
+
+    // Assert
+    expect(processedData).toEqual([]);
+    });
+
+    test('should handle single category and video as objects', () => {
+    // Arrange
+    const rawData = {
+        youtubers: {
+        youtuber: {
+            id: '1',
+            channel: 'TechReviewsXYZ',
+            name: 'Maria García',
+            subscribers: '5230000',
+            joinDate: '2015-03-22',
+            categories: {
+            category: 'Technology'
+            },
+            videos: {
+            video: {
+                id: 'v1001',
+                title: '10 Best Smartphones of 2024',
+                duration: '15:42',
+                views: '3500000',
+                uploadDate: '2024-02-15',
+                likes: '278500',
+                comments: '15230'
+            }
+            }
+        }
+        }
+    };
+
+    // Act
+    const processedData = processYoutuberData(rawData);
+
+    // Assert
+    expect(processedData).toEqual([
+        {
+        youtuberId: '1',
+        channel: 'TechReviewsXYZ',
+        name: 'Maria García',
+        subscribers: 5230000,
+        joinDate: new Date('2015-03-22'),
+        categories: ['Technology'],
+        videos: [
+            {
+            videoId: 'v1001',
+            title: '10 Best Smartphones of 2024',
+            duration: '15:42',
+            views: 3500000,
+            uploadDate: new Date('2024-02-15'),
+            likes: 278500,
+            comments: 15230
+            }
+        ]
+        }
+    ]);
     });
 });
