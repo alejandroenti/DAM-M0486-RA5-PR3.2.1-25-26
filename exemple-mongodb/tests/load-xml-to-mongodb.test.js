@@ -2,9 +2,16 @@ const fs = require('fs').promises;
 
 const { parseXMLFile } = require('../src/load-xml-to-mongodb');
 
+beforeEach(() => {
+  jest.mock('fs');
+});
+
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
 test('should parse XML file', async () => {
   // Arrange
-  jest.mock('fs');
   fs.readFile = jest.fn();
   fs.readFile.mockResolvedValue(`
   <?xml version="1.0" encoding="UTF-8"?>
@@ -33,7 +40,7 @@ test('should parse XML file', async () => {
    `);
 
   // Act & Assert
-  expect(await parseXMLFile('dummy-path')).toEqual({
+  await expect(parseXMLFile('dummy-path')).resolves.toEqual({
     youtubers: {
       youtuber: {
         id: '1',
@@ -58,4 +65,13 @@ test('should parse XML file', async () => {
       }
     }
   });
+});
+
+test('should handle XML parsing errors', async () => {
+  // Arrange
+  fs.readFile = jest.fn();
+  fs.readFile.mockResolvedValue(`Invalid XML Content`);
+
+  // Act & Assert
+  await expect(parseXMLFile('dummy-path')).rejects.toThrow();
 });
