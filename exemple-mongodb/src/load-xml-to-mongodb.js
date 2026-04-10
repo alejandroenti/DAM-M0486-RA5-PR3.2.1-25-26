@@ -144,6 +144,5 @@ if (require.main === module) {
 // Exportar les funcions pels tests
 module.exports = {
   parseXMLFile,
-  processYoutuberData,
-  loadDataToMongoDB
+  processYoutuberData
 };
